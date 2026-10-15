@@ -12,65 +12,65 @@ jobs:
       ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  - name: Checkout
+    uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
+  - name: Set up JDK 17
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+  - name: Cache Gradle packages
+    uses: actions/cache@v4
+    with:
+      path: |
+        ~/.gradle/caches
+        ~/.gradle/wrapper
+      key: ${{ runner.os }}-gradle-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
 
-      - name: Install Android command line tools
-        run: |
-          mkdir -p "${ANDROID_SDK_ROOT}"
-          cd "${ANDROID_SDK_ROOT}"
-          curl -sSL -o cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-10925488_latest.zip"
-          unzip -q cmdline-tools.zip -d cmdline-tools-temp
-          mkdir -p cmdline-tools/latest
-          mv cmdline-tools-temp/cmdline-tools/* cmdline-tools/latest/
-          rm -rf cmdline-tools.zip cmdline-tools-temp
-        shell: bash
+  - name: Install Android command line tools
+    run: |
+      mkdir -p "${ANDROID_SDK_ROOT}"
+      cd "${ANDROID_SDK_ROOT}"
+      curl -sSL -o cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-10925488_latest.zip"
+      unzip -q cmdline-tools.zip -d cmdline-tools-temp
+      mkdir -p cmdline-tools/latest
+      mv cmdline-tools-temp/cmdline-tools/* cmdline-tools/latest/
+      rm -rf cmdline-tools.zip cmdline-tools-temp
+    shell: bash
 
-      - name: Install SDK packages and accept licenses
-        run: |
-          export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
-          yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses
-          sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-        env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
-        shell: bash
+  - name: Install SDK packages and accept licenses
+    run: |
+      export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
+      yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses
+      sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+    env:
+      ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+    shell: bash
 
-      - name: Ensure gradlew exists (generate wrapper if missing)
-        run: |
-          if [ -f "./gradlew" ]; then
-            echo "gradlew exists"
-            chmod +x ./gradlew
-          else
-            echo "gradlew not found, installing gradle and generating wrapper"
-            sudo apt-get update
-            sudo apt-get install -y gradle unzip
-            gradle wrapper --gradle-version 8.2
-            chmod +x ./gradlew
-          fi
-        shell: bash
+  - name: Ensure gradlew exists (generate wrapper if missing)
+    run: |
+      if [ -f "./gradlew" ]; then
+        echo "gradlew exists"
+        chmod +x ./gradlew
+      else
+        echo "gradlew not found, installing gradle and generating wrapper"
+        sudo apt-get update
+        sudo apt-get install -y gradle unzip
+        gradle wrapper --gradle-version 8.2
+        chmod +x ./gradlew
+      fi
+    shell: bash
 
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
-        env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
-        shell: bash
+  - name: Build Debug APK
+    run: ./gradlew assembleDebug --no-daemon --stacktrace
+    env:
+      ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+    shell: bash
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+  - name: Upload artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: app-debug-apk
+      path: app/build/outputs/apk/debug/app-debug.apk
